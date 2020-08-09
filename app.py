@@ -3,7 +3,8 @@ from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
 
-currentURL = None
+cache = {}
+cache['currentImage'] = None
 
 @app.route("/sms", methods=['GET', 'POST'])
 def mms_reply():
@@ -17,12 +18,12 @@ def mms_reply():
         resp.message("Please attach an image you want to see on Daran and Gavin's wall!")
     else:
         resp.message("Thank you for sending this image! It will promptly be displayed on Daran and Gavin's living room wall.")
-        currentURL = imageURL
+        cache['currentImage'] = imageURL
     return str(resp)
 
 @app.route("/wall", methods=['GET'])
 def wall():
-    return str(currentURL)
+    return str(cache['currentImage'])
 
 if __name__ == "__main__":
     app.run(debug=True)
