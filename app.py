@@ -1,10 +1,49 @@
 from flask import Flask, request, redirect
 from twilio.twiml.messaging_response import MessagingResponse
+import sqlite3 
 
 app = Flask(__name__)
 
-cache = {}
-cache['currentImage'] = None
+def create_table(conn):
+    """ create a table from the create_table_sql statement
+    :param conn: Connection object
+    :param create_table_sql: a CREATE TABLE statement
+    :return:
+    """
+    sql_create_images_table = """ CREATE TABLE IF NOT EXISTS images (
+                                    id integer PRIMARY KEY,
+                                    url text
+                                ); """
+    try:
+        c = conn.cursor()
+        c.execute(sql_create_images_table)
+    except sqlite3.Error as e:
+        print(e)
+
+def add_image(conn, imageURL):
+    sql = ''' INSERT INTO images(url)
+              VALUES(?) '''
+    c = conn.cursor()
+    c.execute(sql, imageURL)
+    conn.commit()
+    return c.lastrowid
+
+def get_recent(conn):
+    sql = ''' SELECT *
+              FROM images
+              WHERE id=(SELECT MAX(id) FROM images)
+            '''
+    c = conn.cursor()
+    c.execute(sql)
+    row = c.fetchone()
+    return row
+
+conn = sqlite3.connect("images.db", check_same_thread=False)
+
+if conn is not None:
+    create_table(conn)
+
+
 
 @app.route("/sms", methods=['GET', 'POST'])
 def mms_reply():
@@ -18,12 +57,13 @@ def mms_reply():
         resp.message("Please attach an image you want to see on Daran and Gavin's wall!")
     else:
         resp.message("Thank you for sending this image! It will promptly be displayed on Daran and Gavin's living room wall.")
-        cache['currentImage'] = imageURL
+        add_image(conn, [imageURL])
     return str(resp)
 
 @app.route("/wall", methods=['GET'])
 def wall():
-    return str(cache['currentImage'])
+    url = get_recent(conn)
+    return "no url" if url is None else str(url[1])
 
 if __name__ == "__main__":
     app.run(debug=True)
