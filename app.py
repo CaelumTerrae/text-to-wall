@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, render_template, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
 import sqlite3 
 
@@ -60,10 +60,14 @@ def mms_reply():
         add_image(conn, [imageURL])
     return str(resp)
 
+@app.route("/recent", methods=['GET'])
+def recent():
+    url = get_recent(conn)
+    return jsonify(url="no url" if url is None else str(url[1]))
+
 @app.route("/wall", methods=['GET'])
 def wall():
-    url = get_recent(conn)
-    return "no url" if url is None else str(url[1])
+    return render_template("wall.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

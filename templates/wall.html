@@ -1,0 +1,16 @@
+<!doctype html>
+<title>This shit is the wall now:</title>
+<script>
+    fetch('/recent')
+    .then(response => response.json())
+    .then((data) => {
+        if (data.url !== "no url"){
+            document.getElementById("background").src = data.url
+        }
+        else{
+            document.getElementById("background").src = "https://image.shutterstock.com/z/stock-vector-poop-icon-in-trendy-design-vector-eps-1707343408.jpg"
+        }
+    })
+</script>
+
+<img id="background" style="height: 100%; background-position:center; background-repeat:no-repeat; background-size:cover;">
